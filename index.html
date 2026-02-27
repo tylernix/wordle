@@ -23,7 +23,7 @@
     flex-direction: column;
     align-items: center;
     border-bottom: 1px solid #3a3a3c;
-    padding: 16px 0;
+    padding: 16px 8px;
     gap: 10px;
   }
   header h1 { font-size: 36px; font-weight: 700; letter-spacing: 4px; }
@@ -219,6 +219,8 @@
     display: grid;
     gap: 5px;
     padding: 10px 0;
+    width: 100%;
+    max-width: 350px;
   }
   .row {
     display: grid;
@@ -226,8 +228,8 @@
     gap: 5px;
   }
   .tile {
-    width: 62px;
-    height: 62px;
+    aspect-ratio: 1;
+    width: 100%;
     border: 2px solid #3a3a3c;
     display: flex;
     align-items: center;
@@ -258,12 +260,16 @@
     flex-direction: column;
     gap: 6px;
     align-items: center;
+    width: 100%;
+    max-width: 500px;
+    padding: 0 8px;
   }
-  .kb-row { display: flex; gap: 6px; }
+  .kb-row { display: flex; gap: 4px; width: 100%; justify-content: center; }
   .key {
     height: 58px;
-    min-width: 43px;
-    padding: 0 8px;
+    flex: 1;
+    max-width: 43px;
+    padding: 0 4px;
     border: none;
     border-radius: 4px;
     background: #818384;
@@ -276,8 +282,10 @@
     justify-content: center;
     text-transform: uppercase;
     transition: background 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
-  .key.wide { min-width: 65px; font-size: 12px; }
+  .key.wide { flex: 1.5; max-width: 65px; font-size: 12px; }
   .key.ready { background: #538d4e; }
   .key.correct { background: #538d4e; }
   .key.present { background: #b59f3b; }
@@ -329,6 +337,32 @@
   .modal .error { color: #e44; font-size: 13px; min-height: 20px; margin-bottom: 8px; }
   .modal-btns { display: flex; gap: 8px; justify-content: center; }
   .modal-btns .btn { min-width: 100px; }
+
+  /* Mobile responsive */
+  @media (max-width: 480px) {
+    header h1 { font-size: 28px; letter-spacing: 2px; }
+    .mode-btn { padding: 5px 10px; font-size: 11px; }
+    .diff-btn { padding: 3px 8px; font-size: 11px; }
+    #timer { font-size: 16px; }
+    #message { font-size: 14px; height: 32px; }
+    .tile { font-size: 24px; }
+    .key { height: 50px; font-size: 12px; }
+    .key.wide { font-size: 10px; }
+    #board { max-width: 300px; }
+    .modal { margin: 0 16px; padding: 20px; }
+    .btn { padding: 6px 10px; font-size: 12px; }
+  }
+
+  @media (max-width: 360px) {
+    header h1 { font-size: 24px; }
+    .mode-btn { padding: 4px 8px; font-size: 10px; }
+    .key { height: 44px; font-size: 11px; }
+    .key.wide { font-size: 9px; }
+    #board { max-width: 260px; gap: 4px; }
+    .row { gap: 4px; }
+    .tile { font-size: 20px; }
+    .kb-row { gap: 3px; }
+  }
 </style>
 </head>
 <body>
