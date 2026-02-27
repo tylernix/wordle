@@ -81,6 +81,8 @@
   .mode-btn[data-mode="random"].active:hover { background: #6aaa64; }
   .mode-btn[data-mode="challenge"] { border-color: #565758; color: #818384; }
   .mode-btn[data-mode="challenge"]:hover { border-color: #818384; color: #fff; }
+  .mode-btn[data-mode="challenge"].active { background: #565758; color: #fff; }
+  .mode-btn[data-mode="challenge"].active:hover { background: #6a6a6c; }
 
   /* Difficulty selector */
   .difficulty-row {
@@ -359,17 +361,6 @@
 <button id="play-again-btn">Play Again</button>
 <div id="board"></div>
 <div id="keyboard"></div>
-
-<div class="modal-overlay" id="challenge-modal">
-  <div class="modal">
-    <h2>Challenge A Friend</h2>
-    <p style="color:#818384;font-size:14px;margin-bottom:12px">A random word has been chosen — good luck!</p>
-    <div class="modal-btns">
-      <button class="btn btn-gray" id="challenge-cancel">Cancel</button>
-      <button class="btn btn-green" id="challenge-create">Copy Link</button>
-    </div>
-  </div>
-</div>
 
 <div class="modal-overlay" id="link-modal">
   <div class="modal">
@@ -873,7 +864,6 @@ function restartGame() {
 }
 
 // Challenge modal
-const challengeModal = document.getElementById("challenge-modal");
 const linkModal = document.getElementById("link-modal");
 const linkOutput = document.getElementById("link-output");
 let challengePickedWord = "";
@@ -881,22 +871,9 @@ let challengePickedWord = "";
 document.getElementById("challenge-btn").addEventListener("click", () => {
   const pool = getAnswerPool();
   challengePickedWord = pool[Math.floor(Math.random() * pool.length)];
-  challengeModal.classList.add("active");
-});
-
-document.getElementById("challenge-cancel").addEventListener("click", () => {
-  challengeModal.classList.remove("active");
-});
-
-challengeModal.addEventListener("click", e => {
-  if (e.target === challengeModal) challengeModal.classList.remove("active");
-});
-
-document.getElementById("challenge-create").addEventListener("click", () => {
   const encoded = encodeWord(challengePickedWord);
   const url = `${location.origin}${location.pathname}?c=${encoded}`;
   linkOutput.value = url;
-  challengeModal.classList.remove("active");
   linkModal.classList.add("active");
 });
 
@@ -917,7 +894,7 @@ linkModal.addEventListener("click", e => {
 
 // Keyboard input
 document.addEventListener("keydown", e => {
-  if (challengeModal.classList.contains("active") || linkModal.classList.contains("active")) return;
+  if (linkModal.classList.contains("active")) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === "Enter") handleKey("Enter");
   else if (e.key === "Backspace") handleKey("Backspace");
