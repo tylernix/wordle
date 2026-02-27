@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wordle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: #121213;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  header {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-bottom: 1px solid #3a3a3c;
+    padding: 16px 0;
+    gap: 10px;
+  }
+  header h1 { font-size: 36px; font-weight: 700; letter-spacing: 4px; }
+  .header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #mode-label {
+    font-size: 11px;
+    color: #818384;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  #mode-label span { color: #6aaa64; font-weight: 700; }
+  .header-btns {
+    display: flex;
+    gap: 6px;
+  }
+  .btn {
+    padding: 8px 12px;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-green { background: #538d4e; }
+  .btn-green:hover { background: #6aaa64; }
+  .btn-blue { background: #3a7cc6; }
+  .btn-blue:hover { background: #4a9ae6; }
+  .btn-gray { background: #565758; }
+  .btn-gray:hover { background: #6a6b6c; }
+
+  /* Game mode buttons */
+  .mode-btn {
+    padding: 6px 14px;
+    border: 2px solid #3a3a3c;
+    border-radius: 4px;
+    background: transparent;
+    color: #818384;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { border-color: #565758; color: #fff; }
+  .mode-btn[data-mode="daily"] { border-color: #3a7cc6; color: #3a7cc6; }
+  .mode-btn[data-mode="daily"].active { background: #3a7cc6; color: #fff; }
+  .mode-btn[data-mode="daily"].active:hover { background: #4a9ae6; }
+  .mode-btn[data-mode="random"] { border-color: #538d4e; color: #538d4e; }
+  .mode-btn[data-mode="random"].active { background: #538d4e; color: #fff; }
+  .mode-btn[data-mode="random"].active:hover { background: #6aaa64; }
+  .mode-btn[data-mode="challenge"] { border-color: #565758; color: #818384; }
+  .mode-btn[data-mode="challenge"]:hover { border-color: #818384; color: #fff; }
+
+  /* Difficulty selector */
+  .difficulty-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .difficulty-row label {
+    font-size: 11px;
+    color: #818384;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-right: 2px;
+  }
+  .diff-btn {
+    padding: 4px 10px;
+    border: 2px solid #3a3a3c;
+    border-radius: 4px;
+    background: transparent;
+    color: #818384;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .diff-btn[data-diff="easy"].active { border-color: #538d4e; color: #538d4e; }
+  .diff-btn[data-diff="medium"].active { border-color: #b59f3b; color: #b59f3b; }
+  .diff-btn[data-diff="hard"].active { border-color: #d94040; color: #d94040; }
+  .diff-btn:hover { border-color: #565758; color: #fff; }
+  .diff-btn[data-diff="easy"].active:hover { border-color: #538d4e; color: #538d4e; }
+  .diff-btn[data-diff="medium"].active:hover { border-color: #b59f3b; color: #b59f3b; }
+  .diff-btn[data-diff="hard"].active:hover { border-color: #d94040; color: #d94040; }
+  .diff-divider { width: 1px; height: 20px; background: #3a3a3c; margin: 0 4px; }
+  .talent-toggle { }
+  .talent-toggle.active { border-color: #9b59b6; color: #9b59b6; }
+  .talent-toggle.active:hover { border-color: #9b59b6; color: #9b59b6; }
+  .tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .info-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    color: inherit;
+    font-size: 9px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 2px;
+    vertical-align: middle;
+    opacity: 0.7;
+  }
+  .tooltip {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: -8px;
+    width: 220px;
+    padding: 10px 12px;
+    background: #2a2a2b;
+    border: 1px solid #3a3a3c;
+    border-radius: 6px;
+    color: #d7dadc;
+    font-size: 12px;
+    line-height: 1.5;
+    z-index: 10;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 12px;
+    border: 6px solid transparent;
+    border-bottom-color: #3a3a3c;
+  }
+  .tooltip-wrap:hover .tooltip { display: block; }
+  .tile.faded { color: transparent; transition: color 1s ease; }
+
+  /* Confetti */
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+  }
+  #play-again-btn {
+    display: none;
+    margin-top: 8px;
+    padding: 12px 28px;
+    background: #538d4e;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 51;
+  }
+  #play-again-btn:hover { background: #6aaa64; }
+
+  /* Timer */
+  #timer {
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #818384;
+    height: 28px;
+    display: flex;
+    align-items: center;
+  }
+  #timer.running { color: #fff; }
+  #timer.done { color: #6aaa64; }
+
+  #message {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  #board {
+    display: grid;
+    gap: 5px;
+    padding: 10px 0;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+  }
+  .tile {
+    width: 62px;
+    height: 62px;
+    border: 2px solid #3a3a3c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    text-transform: uppercase;
+    transition: transform 0.3s;
+  }
+  .tile.filled { border-color: #565758; }
+  .tile.active { border: 2px dotted #888; }
+  .tile.flip { animation: flip 0.5s ease forwards; }
+  @keyframes flip {
+    0% { transform: rotateX(0); }
+    50% { transform: rotateX(90deg); }
+    100% { transform: rotateX(0); }
+  }
+  .tile.correct { background: #538d4e; border-color: #538d4e; }
+  .tile.present { background: #b59f3b; border-color: #b59f3b; }
+  .tile.absent { background: #3a3a3c; border-color: #3a3a3c; }
+  .tile.pop { animation: pop 0.1s ease; }
+  @keyframes pop {
+    50% { transform: scale(1.12); }
+  }
+  #keyboard {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
+  .kb-row { display: flex; gap: 6px; }
+  .key {
+    height: 58px;
+    min-width: 43px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 4px;
+    background: #818384;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  .key.wide { min-width: 65px; font-size: 12px; }
+  .key.ready { background: #538d4e; }
+  .key.correct { background: #538d4e; }
+  .key.present { background: #b59f3b; }
+  .key.absent { background: #3a3a3c; opacity: 0.4; pointer-events: none; }
+  .key.disabled { opacity: 0.4; pointer-events: none; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+  }
+  .row.shake { animation: shake 0.4s ease; }
+
+  /* Modal for challenge creation */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #1a1a1b;
+    border: 1px solid #3a3a3c;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+  }
+  .modal h2 { margin-bottom: 16px; font-size: 20px; }
+  .modal input {
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 6px;
+    text-align: center;
+    border: 2px solid #3a3a3c;
+    border-radius: 4px;
+    background: #121213;
+    color: #fff;
+    outline: none;
+    margin-bottom: 8px;
+  }
+  .modal input:focus { border-color: #538d4e; }
+  .modal .error { color: #e44; font-size: 13px; min-height: 20px; margin-bottom: 8px; }
+  .modal-btns { display: flex; gap: 8px; justify-content: center; }
+  .modal-btns .btn { min-width: 100px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>WORDLE</h1>
+  <div class="header-row">
+    <div class="header-btns">
+      <button class="mode-btn active" data-mode="daily" id="daily-btn">Daily</button>
+      <button class="mode-btn" data-mode="random" id="new-game-btn">Free Play</button>
+      <button class="mode-btn" data-mode="challenge" id="challenge-btn">Challenge A Friend</button>
+      <button id="share-btn" class="btn btn-blue" style="display:none">Share</button>
+    </div>
+  </div>
+  <div id="mode-label" style="margin-bottom: 4px"></div>
+  <div class="header-row">
+    <div class="difficulty-row">
+      <label>Difficulty:</label>
+      <button class="diff-btn" data-diff="easy">Easy</button>
+      <button class="diff-btn active" data-diff="medium">Med</button>
+      <button class="diff-btn" data-diff="hard">Hard</button>
+      <div class="diff-divider"></div>
+      <button class="diff-btn talent-toggle tooltip-wrap" id="talent-toggle">Talent <span class="info-icon">?</span>
+        <span class="tooltip">A memory challenge — guessed letters fade away after 5 seconds. Can you remember what you played? An idea by Talent. </span>
+      </button>
+    </div>
+  </div>
+</header>
+<canvas id="confetti-canvas"></canvas>
+<div id="timer">0:00</div>
+<div id="message"></div>
+<button id="play-again-btn">Play Again</button>
+<div id="board"></div>
+<div id="keyboard"></div>
+
+<div class="modal-overlay" id="challenge-modal">
+  <div class="modal">
+    <h2>Create a Challenge</h2>
+    <p style="color:#818384;font-size:14px;margin-bottom:12px">Pick a word to challenge your coworker</p>
+    <div id="challenge-word" style="font-size:36px;font-weight:700;letter-spacing:8px;text-transform:uppercase;padding:16px 0;color:#6aaa64"></div>
+    <div class="modal-btns" style="margin-bottom:12px">
+      <button class="btn btn-gray" id="challenge-reroll">Shuffle</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-gray" id="challenge-cancel">Cancel</button>
+      <button class="btn btn-green" id="challenge-create">Create Link</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="link-modal">
+  <div class="modal">
+    <h2>Challenge Created!</h2>
+    <p style="color:#818384;font-size:14px;margin-bottom:12px">Send this link to your coworker:</p>
+    <input type="text" id="link-output" readonly style="letter-spacing:0;font-size:13px">
+    <div class="modal-btns">
+      <button class="btn btn-blue" id="link-copy">Copy Link</button>
+      <button class="btn btn-gray" id="link-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="wordle-words.js"></script>
+<script>
+
+const messageEl = document.getElementById("message");
+
+// Difficulty: easy=6 guesses (easier words), medium=6, hard=6 + must reuse hints
+const DIFFICULTY = { easy: { maxGuesses: 6 }, medium: { maxGuesses: 6 }, hard: { maxGuesses: 6 } };
+let difficulty = "medium";
+let talentMode = false;
+
+function getAnswerPool() {
+  if (difficulty === "easy") return EASY_WORDS;
+  if (difficulty === "hard") return HARD_WORDS;
+  return MEDIUM_WORDS;
+}
+
+function pickRandomAnswer() {
+  const pool = getAnswerPool();
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// Simple encoding to obscure the word in the URL (base64 of shifted chars)
+function encodeWord(word) {
+  const shifted = word.split("").map(c => String.fromCharCode(c.charCodeAt(0) + 3)).join("");
+  return btoa(shifted);
+}
+function decodeWord(encoded) {
+  try {
+    const shifted = atob(encoded);
+    return shifted.split("").map(c => String.fromCharCode(c.charCodeAt(0) - 3)).join("").toLowerCase();
+  } catch { return null; }
+}
+
+// Date-seeded pseudo-random for daily mode
+function getDailyWord() {
+  const pool = getAnswerPool();
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}-${difficulty}`;
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+    hash |= 0;
+  }
+  return pool[Math.abs(hash) % pool.length];
+}
+
+function getDailyNumber() {
+  const start = new Date(2025, 0, 1);
+  const today = new Date();
+  return Math.floor((today - start) / 86400000);
+}
+
+// Timer
+let timerStart, timerInterval, elapsedMs;
+const timerEl = document.getElementById("timer");
+
+function startTimer() {
+  stopTimer();
+  timerStart = Date.now();
+  elapsedMs = 0;
+  timerEl.textContent = "0:00";
+  timerEl.className = "running";
+  timerInterval = setInterval(() => {
+    elapsedMs = Date.now() - timerStart;
+    timerEl.textContent = formatTime(elapsedMs);
+  }, 100);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  elapsedMs = timerStart ? Date.now() - timerStart : 0;
+  timerEl.className = "done";
+}
+
+function formatTime(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}:${sec.toString().padStart(2, "0")}`;
+}
+
+// Confetti
+const confettiCanvas = document.getElementById("confetti-canvas");
+const confettiCtx = confettiCanvas.getContext("2d");
+const playAgainBtn = document.getElementById("play-again-btn");
+let confettiPieces = [];
+let confettiAnim = null;
+
+function launchConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+  confettiPieces = [];
+  const colors = ["#538d4e","#b59f3b","#6aaa64","#3a7cc6","#d94040","#9b59b6","#f1c40f","#fff"];
+  for (let i = 0; i < 150; i++) {
+    confettiPieces.push({
+      x: Math.random() * confettiCanvas.width,
+      y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 3 + 2,
+      rot: Math.random() * 360,
+      rv: (Math.random() - 0.5) * 8,
+      opacity: 1
+    });
+  }
+  playAgainBtn.style.display = "";
+  animateConfetti();
+}
+
+function animateConfetti() {
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  let alive = 0;
+  for (const p of confettiPieces) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05;
+    p.rot += p.rv;
+    if (p.y > confettiCanvas.height + 20) {
+      p.opacity -= 0.02;
+    }
+    if (p.opacity <= 0) continue;
+    alive++;
+    confettiCtx.save();
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate(p.rot * Math.PI / 180);
+    confettiCtx.globalAlpha = Math.max(0, p.opacity);
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    confettiCtx.restore();
+  }
+  if (alive > 0) {
+    confettiAnim = requestAnimationFrame(animateConfetti);
+  } else {
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    confettiAnim = null;
+  }
+}
+
+function stopConfetti() {
+  if (confettiAnim) { cancelAnimationFrame(confettiAnim); confettiAnim = null; }
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiPieces = [];
+  playAgainBtn.style.display = "none";
+}
+
+let answer, currentRow, currentCol, gameOver, gameMode, results;
+const board = document.getElementById("board");
+const keyboardEl = document.getElementById("keyboard");
+const modeLabelEl = document.getElementById("mode-label");
+const shareBtn = document.getElementById("share-btn");
+const tiles = [];
+const keyMap = {};
+
+function getMaxGuesses() {
+  return DIFFICULTY[difficulty].maxGuesses;
+}
+
+function init(mode, word) {
+  gameMode = mode || "daily";
+  if (gameMode === "challenge" && word) {
+    answer = word.toLowerCase();
+  } else if (gameMode === "daily") {
+    answer = getDailyWord();
+  } else {
+    answer = pickRandomAnswer();
+  }
+  stopConfetti();
+  currentRow = 0;
+  currentCol = 0;
+  gameOver = false;
+  results = [];
+  messageEl.textContent = "";
+  board.innerHTML = "";
+  keyboardEl.innerHTML = "";
+  shareBtn.style.display = "none";
+  tiles.length = 0;
+  Object.keys(keyMap).forEach(k => delete keyMap[k]);
+  updateModeLabel();
+  buildBoard();
+  buildKeyboard();
+  updateActiveTile();
+  startTimer();
+}
+
+function updateModeLabel() {
+  // Update mode button active states
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+  const activeMode = gameMode === "challenge" ? "challenge" : gameMode === "daily" ? "daily" : "random";
+  const activeBtn = document.querySelector(`.mode-btn[data-mode="${activeMode}"]`);
+  if (activeBtn) activeBtn.classList.add("active");
+
+  if (gameMode === "daily") {
+    modeLabelEl.innerHTML = `<span>Daily</span> #${getDailyNumber()} — same word for everyone today`;
+  } else if (gameMode === "challenge") {
+    modeLabelEl.innerHTML = `<span>Challenge</span> — custom word from a friend`;
+  } else {
+    modeLabelEl.innerHTML = `<span>Free Play</span> — random word`;
+  }
+}
+
+function buildBoard() {
+  const max = getMaxGuesses();
+  board.style.gridTemplateRows = `repeat(${max}, 1fr)`;
+  for (let r = 0; r < max; r++) {
+    const row = document.createElement("div");
+    row.classList.add("row");
+    tiles[r] = [];
+    for (let c = 0; c < 5; c++) {
+      const tile = document.createElement("div");
+      tile.classList.add("tile");
+      row.appendChild(tile);
+      tiles[r][c] = tile;
+    }
+    board.appendChild(row);
+  }
+}
+
+function buildKeyboard() {
+  const rows = [
+    ["q","w","e","r","t","y","u","i","o","p"],
+    ["a","s","d","f","g","h","j","k","l"],
+    ["Backspace","z","x","c","v","b","n","m","Clear","Enter"]
+  ];
+  rows.forEach(r => {
+    const rowDiv = document.createElement("div");
+    rowDiv.classList.add("kb-row");
+    r.forEach(k => {
+      const btn = document.createElement("button");
+      btn.classList.add("key");
+      if (k === "Enter" || k === "Backspace" || k === "Clear") btn.classList.add("wide");
+      btn.textContent = k === "Backspace" ? "\u232B" : k;
+      btn.dataset.key = k;
+      btn.addEventListener("click", () => handleKey(k));
+      rowDiv.appendChild(btn);
+      keyMap[k] = btn;
+    });
+    keyboardEl.appendChild(rowDiv);
+  });
+  updateEnterKey();
+}
+
+function updateActiveTile() {
+  document.querySelectorAll(".tile.active").forEach(t => t.classList.remove("active"));
+  if (!gameOver && currentCol < 5 && tiles[currentRow]) {
+    tiles[currentRow][currentCol].classList.add("active");
+  }
+}
+
+function updateEnterKey() {
+  const enterBtn = keyMap["Enter"];
+  if (!enterBtn) return;
+  if (currentCol === 5) {
+    enterBtn.classList.add("ready");
+    enterBtn.classList.remove("disabled");
+  } else {
+    enterBtn.classList.remove("ready");
+    enterBtn.classList.add("disabled");
+  }
+}
+
+// Hard mode validation: must reuse all revealed hints
+function checkHardMode(guess) {
+  for (let i = 0; i < results.length; i++) {
+    const prevGuess = [];
+    for (let c = 0; c < 5; c++) {
+      prevGuess.push(tiles[i][c].textContent.toLowerCase());
+    }
+    for (let c = 0; c < 5; c++) {
+      if (results[i][c] === "correct" && guess[c] !== prevGuess[c]) {
+        return `Position ${c + 1} must be ${prevGuess[c].toUpperCase()}`;
+      }
+      if (results[i][c] === "present" && !guess.includes(prevGuess[c])) {
+        return `Guess must contain ${prevGuess[c].toUpperCase()}`;
+      }
+    }
+  }
+  return null;
+}
+
+function handleKey(key) {
+  if (gameOver) return;
+  if (key === "Clear") {
+    while (currentCol > 0) {
+      currentCol--;
+      tiles[currentRow][currentCol].textContent = "";
+      tiles[currentRow][currentCol].classList.remove("filled");
+    }
+    updateEnterKey();
+  } else if (key === "Backspace") {
+    if (currentCol > 0) {
+      currentCol--;
+      tiles[currentRow][currentCol].textContent = "";
+      tiles[currentRow][currentCol].classList.remove("filled");
+      updateEnterKey();
+    }
+  } else if (key === "Enter") {
+    if (currentCol < 5) {
+      shakeRow(currentRow);
+      showMessage("Not enough letters");
+      return;
+    }
+    const guess = Array.from({ length: 5 }, (_, i) => tiles[currentRow][i].textContent).join("").toLowerCase();
+    if (!VALID_GUESSES.has(guess)) {
+      shakeRow(currentRow);
+      showMessage("Not in word list");
+      return;
+    }
+    if (difficulty === "medium" || difficulty === "hard") {
+      const err = checkHardMode(guess);
+      if (err) {
+        shakeRow(currentRow);
+        showMessage(err);
+        return;
+      }
+    }
+    revealRow(guess);
+  } else if (/^[a-z]$/i.test(key) && currentCol < 5 && !(keyMap[key] && keyMap[key].classList.contains("absent"))) {
+    tiles[currentRow][currentCol].textContent = key.toLowerCase();
+    tiles[currentRow][currentCol].classList.add("filled");
+    tiles[currentRow][currentCol].classList.add("pop");
+    setTimeout(() => tiles[currentRow][currentCol - 1]?.classList.remove("pop"), 100);
+    currentCol++;
+    updateEnterKey();
+  }
+  updateActiveTile();
+}
+
+function revealRow(guess) {
+  const row = currentRow;
+  const maxG = getMaxGuesses();
+  const result = Array(5).fill("absent");
+  const answerArr = answer.split("");
+  const guessArr = guess.split("");
+
+  for (let i = 0; i < 5; i++) {
+    if (guessArr[i] === answerArr[i]) {
+      result[i] = "correct";
+      answerArr[i] = null;
+      guessArr[i] = null;
+    }
+  }
+  for (let i = 0; i < 5; i++) {
+    if (guessArr[i] === null) continue;
+    const idx = answerArr.indexOf(guessArr[i]);
+    if (idx !== -1) {
+      result[i] = "present";
+      answerArr[idx] = null;
+    }
+  }
+
+  results.push(result);
+
+  for (let i = 0; i < 5; i++) {
+    const tile = tiles[row][i];
+    const delay = i * 300;
+    setTimeout(() => {
+      tile.classList.add("flip");
+      setTimeout(() => {
+        tile.classList.add(result[i]);
+        updateKey(guess[i], result[i]);
+      }, 250);
+    }, delay);
+  }
+
+  const revealDone = 5 * 300 + 250;
+
+  // Talent mode: fade out letters 5 seconds after reveal
+  if (talentMode) {
+    setTimeout(() => {
+      for (let i = 0; i < 5; i++) {
+        tiles[row][i].classList.add("faded");
+      }
+    }, revealDone + 5000);
+  }
+
+  setTimeout(() => {
+    if (guess === answer) {
+      gameOver = true;
+      stopTimer();
+      const msgs = ["Genius!", "Magnificent!", "Impressive!", "Splendid!", "Great!", "Phew!", "Close one!", "Barely!"];
+      showMessage(msgs[Math.min(row, msgs.length - 1)]);
+      shareBtn.style.display = "";
+      launchConfetti();
+    } else if (row === maxG - 1) {
+      gameOver = true;
+      stopTimer();
+      showMessage(answer.toUpperCase());
+      shareBtn.style.display = "";
+    }
+    currentRow++;
+    currentCol = 0;
+    updateEnterKey();
+    updateActiveTile();
+  }, revealDone);
+}
+
+const priority = { absent: 0, present: 1, correct: 2 };
+
+function updateKey(letter, result) {
+  const btn = keyMap[letter];
+  if (!btn) return;
+  const current = btn.dataset.result || "";
+  if ((priority[result] || 0) > (priority[current] || -1)) {
+    btn.classList.remove("correct", "present", "absent");
+    btn.classList.add(result);
+    btn.dataset.result = result;
+  }
+}
+
+function shakeRow(row) {
+  const rowEl = tiles[row][0].parentElement;
+  rowEl.classList.add("shake");
+  setTimeout(() => rowEl.classList.remove("shake"), 400);
+}
+
+function showMessage(msg) {
+  messageEl.textContent = msg;
+  if (!gameOver) setTimeout(() => { messageEl.textContent = ""; }, 1500);
+}
+
+// Share results as emoji grid
+function shareResults() {
+  const emojiMap = { correct: "\uD83D\uDFE9", present: "\uD83D\uDFE8", absent: "\u2B1B" };
+  const maxG = getMaxGuesses();
+  const won = results[results.length - 1].every(r => r === "correct");
+  const score = won ? `${results.length}/${maxG}` : `X/${maxG}`;
+  const timeStr = formatTime(elapsedMs);
+  let diffLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+  if (talentMode) diffLabel += " + Talent";
+
+  let header;
+  if (gameMode === "daily") {
+    header = `Wordle Daily #${getDailyNumber()} ${score}`;
+  } else if (gameMode === "challenge") {
+    header = `Wordle Challenge ${score}`;
+  } else {
+    header = `Wordle ${score}`;
+  }
+
+  const grid = results.map(row => row.map(r => emojiMap[r]).join("")).join("\n");
+  const text = `${header}\n${diffLabel} | ${timeStr}\n${grid}`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showMessage("Copied to clipboard!");
+    setTimeout(() => {
+      if (gameOver) {
+        const finalMsg = won
+          ? ["Genius!","Magnificent!","Impressive!","Splendid!","Great!","Phew!","Close one!","Barely!"][Math.min(results.length - 1, 7)]
+          : answer.toUpperCase();
+        messageEl.textContent = finalMsg;
+      }
+    }, 1500);
+  });
+}
+
+// Difficulty buttons (exclude talent toggle)
+const diffBtns = document.querySelectorAll(".diff-btn[data-diff]");
+diffBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.diff === difficulty) return;
+    diffBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    difficulty = btn.dataset.diff;
+    restartGame();
+  });
+});
+
+// Talent toggle
+const talentBtn = document.getElementById("talent-toggle");
+talentBtn.addEventListener("click", () => {
+  talentMode = !talentMode;
+  talentBtn.classList.toggle("active", talentMode);
+  restartGame();
+});
+
+function restartGame() {
+  if (location.search && gameMode === "challenge") {
+    const p = new URLSearchParams(location.search);
+    const c = p.get("c");
+    if (c) {
+      const w = decodeWord(c);
+      if (w) { init("challenge", w); return; }
+    }
+  }
+  init(gameMode);
+}
+
+// Challenge modal
+const challengeModal = document.getElementById("challenge-modal");
+const challengeWordEl = document.getElementById("challenge-word");
+const linkModal = document.getElementById("link-modal");
+const linkOutput = document.getElementById("link-output");
+let challengePickedWord = "";
+
+function pickRandomChallengeWord() {
+  const pool = getAnswerPool();
+  challengePickedWord = pool[Math.floor(Math.random() * pool.length)];
+  challengeWordEl.textContent = challengePickedWord;
+}
+
+document.getElementById("challenge-btn").addEventListener("click", () => {
+  pickRandomChallengeWord();
+  challengeModal.classList.add("active");
+});
+
+document.getElementById("challenge-reroll").addEventListener("click", pickRandomChallengeWord);
+
+document.getElementById("challenge-cancel").addEventListener("click", () => {
+  challengeModal.classList.remove("active");
+});
+
+challengeModal.addEventListener("click", e => {
+  if (e.target === challengeModal) challengeModal.classList.remove("active");
+});
+
+document.getElementById("challenge-create").addEventListener("click", () => {
+  const encoded = encodeWord(challengePickedWord);
+  const url = `${location.origin}${location.pathname}?c=${encoded}`;
+  linkOutput.value = url;
+  challengeModal.classList.remove("active");
+  linkModal.classList.add("active");
+});
+
+document.getElementById("link-copy").addEventListener("click", () => {
+  navigator.clipboard.writeText(linkOutput.value).then(() => {
+    document.getElementById("link-copy").textContent = "Copied!";
+    setTimeout(() => { document.getElementById("link-copy").textContent = "Copy Link"; }, 1500);
+  });
+});
+
+document.getElementById("link-close").addEventListener("click", () => {
+  linkModal.classList.remove("active");
+});
+
+linkModal.addEventListener("click", e => {
+  if (e.target === linkModal) linkModal.classList.remove("active");
+});
+
+// Keyboard input
+document.addEventListener("keydown", e => {
+  if (challengeModal.classList.contains("active") || linkModal.classList.contains("active")) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "Enter") handleKey("Enter");
+  else if (e.key === "Backspace") handleKey("Backspace");
+  else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toLowerCase());
+});
+
+shareBtn.addEventListener("click", shareResults);
+
+playAgainBtn.addEventListener("click", () => {
+  if (location.search) history.replaceState(null, "", location.pathname);
+  init("random");
+});
+
+document.getElementById("new-game-btn").addEventListener("click", () => {
+  if (location.search) history.replaceState(null, "", location.pathname);
+  init("random");
+});
+
+document.getElementById("daily-btn").addEventListener("click", () => {
+  if (location.search) history.replaceState(null, "", location.pathname);
+  init("daily");
+});
+
+function startGame() {
+  const params = new URLSearchParams(location.search);
+  const challengeParam = params.get("c");
+  if (challengeParam) {
+    const word = decodeWord(challengeParam);
+    if (word && word.length === 5 && /^[a-z]+$/.test(word)) {
+      init("challenge", word);
+    } else {
+      init("daily");
+    }
+  } else {
+    init("daily");
+  }
+}
+
+startGame();
+</script>
+</body>
+</html>
