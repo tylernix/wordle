@@ -444,9 +444,9 @@ function decodeWord(encoded) {
 
 // Date-seeded pseudo-random for daily mode
 function getDailyWord() {
-  const pool = getAnswerPool();
+  const pool = [...EASY_WORDS, ...MEDIUM_WORDS, ...HARD_WORDS];
   const today = new Date();
-  const dateStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}-${difficulty}`;
+  const dateStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
   let hash = 0;
   for (let i = 0; i < dateStr.length; i++) {
     hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
