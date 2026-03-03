@@ -725,8 +725,8 @@ function handleKey(key) {
       showMessage("Not in word list");
       return;
     }
-    if (difficulty === "medium" || difficulty === "hard") {
-      const err = checkHints(guess, difficulty === "hard");
+    if (difficulty === "hard") {
+      const err = checkHints(guess, true);
       if (err) {
         shakeRow(currentRow);
         showMessage(err);
