@@ -556,7 +556,7 @@ function stopConfetti() {
   playAgainBtn.style.display = "none";
 }
 
-let answer, currentRow, currentCol, gameOver, gameMode, results;
+let answer, currentRow, currentCol, gameOver, gameMode, results, revealing;
 const board = document.getElementById("board");
 const keyboardEl = document.getElementById("keyboard");
 const modeLabelEl = document.getElementById("mode-label");
@@ -581,6 +581,7 @@ function init(mode, word) {
   currentRow = 0;
   currentCol = 0;
   gameOver = false;
+  revealing = false;
   results = [];
   messageEl.textContent = "";
   board.innerHTML = "";
@@ -697,7 +698,7 @@ function checkHints(guess, strict) {
 }
 
 function handleKey(key) {
-  if (gameOver) return;
+  if (gameOver || revealing) return;
   if (key === "Clear") {
     while (currentCol > 0) {
       currentCol--;
@@ -745,6 +746,7 @@ function handleKey(key) {
 }
 
 function revealRow(guess) {
+  revealing = true;
   const row = currentRow;
   const maxG = getMaxGuesses();
   const result = Array(5).fill("absent");
@@ -808,6 +810,7 @@ function revealRow(guess) {
     }
     currentRow++;
     currentCol = 0;
+    revealing = false;
     updateEnterKey();
     updateActiveTile();
   }, revealDone);
