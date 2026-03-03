@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wordle</title>
+<title>Wordle Hurdle</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23121213'/><rect x='2' y='2' width='8' height='8' rx='1' fill='%233a3a3c'/><rect x='12' y='2' width='8' height='8' rx='1' fill='%23b59f3b'/><rect x='22' y='2' width='8' height='8' rx='1' fill='%233a3a3c'/><rect x='2' y='12' width='8' height='8' rx='1' fill='%23538d4e'/><rect x='12' y='12' width='8' height='8' rx='1' fill='%23538d4e'/><rect x='22' y='12' width='8' height='8' rx='1' fill='%23b59f3b'/><rect x='2' y='22' width='8' height='8' rx='1' fill='%23538d4e'/><rect x='12' y='22' width='8' height='8' rx='1' fill='%23538d4e'/><rect x='22' y='22' width='8' height='8' rx='1' fill='%23538d4e'/></svg>">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -367,7 +367,7 @@
 </head>
 <body>
 <header>
-  <h1>WORDLE</h1>
+  <h1>WORDLE HURDLE</h1>
   <div class="header-row">
     <div class="header-btns">
       <button class="mode-btn active" data-mode="daily" id="daily-btn">Daily</button>
@@ -852,11 +852,11 @@ function shareResults() {
 
   let header;
   if (gameMode === "daily") {
-    header = `Wordle Daily #${getDailyNumber()} ${score}`;
+    header = `Wordle Hurdle Daily #${getDailyNumber()} ${score}`;
   } else if (gameMode === "challenge") {
-    header = `Wordle Challenge ${score}`;
+    header = `Wordle Hurdle Challenge ${score}`;
   } else {
-    header = `Wordle ${score}`;
+    header = `Wordle Hurdle ${score}`;
   }
 
   const grid = results.map(row => row.map(r => emojiMap[r]).join("")).join("\n");

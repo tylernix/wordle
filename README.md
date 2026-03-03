@@ -1,4 +1,4 @@
-# Wordle
+# Wordle Hurdle
 
 A Wordle clone built as part of a team building event — putting on our product hats and using AI to create delightful customer experiences.
 
