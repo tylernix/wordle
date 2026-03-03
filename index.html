@@ -145,7 +145,8 @@
     display: none;
     position: absolute;
     top: calc(100% + 8px);
-    right: -8px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 220px;
     padding: 10px 12px;
     background: #2a2a2b;
@@ -163,7 +164,8 @@
     content: '';
     position: absolute;
     bottom: 100%;
-    right: 12px;
+    left: 50%;
+    transform: translateX(-50%);
     border: 6px solid transparent;
     border-bottom-color: #3a3a3c;
   }
@@ -380,9 +382,15 @@
   <div class="header-row">
     <div class="difficulty-row">
       <label>Difficulty:</label>
-      <button class="diff-btn" data-diff="easy">Easy</button>
-      <button class="diff-btn active" data-diff="medium">Med</button>
-      <button class="diff-btn" data-diff="hard">Hard</button>
+      <span class="tooltip-wrap"><button class="diff-btn" data-diff="easy">Easy</button>
+        <span class="tooltip" id="tip-easy"></span>
+      </span>
+      <span class="tooltip-wrap"><button class="diff-btn active" data-diff="medium">Med</button>
+        <span class="tooltip" id="tip-medium"></span>
+      </span>
+      <span class="tooltip-wrap"><button class="diff-btn" data-diff="hard">Hard</button>
+        <span class="tooltip" id="tip-hard"></span>
+      </span>
       <div class="diff-divider"></div>
       <button class="diff-btn talent-toggle tooltip-wrap" id="talent-toggle">Talent <span class="info-icon">?</span>
         <span class="tooltip">A memory challenge — guessed letters fade away after 5 seconds. Can you remember what you played? An idea by Talent. </span>
@@ -609,6 +617,20 @@ function updateModeLabel() {
     modeLabelEl.innerHTML = `<span>Challenge</span> — custom word from a friend`;
   } else {
     modeLabelEl.innerHTML = `<span>Free Play</span> — random word`;
+  }
+
+  // Update difficulty tooltips based on game mode
+  const tipEasy = document.getElementById("tip-easy");
+  const tipMed = document.getElementById("tip-medium");
+  const tipHard = document.getElementById("tip-hard");
+  if (gameMode === "daily" || gameMode === "challenge") {
+    tipEasy.textContent = "No restrictions on guesses.";
+    tipMed.textContent = "No restrictions — try any word to explore which letters exist.";
+    tipHard.textContent = "Green letters must stay in position and yellow letters must be reused.";
+  } else {
+    tipEasy.textContent = "Common, everyday words. No restrictions on guesses.";
+    tipMed.textContent = "Less common words. No restrictions — try any word to explore which letters exist.";
+    tipHard.textContent = "Obscure words. Green letters must stay in position and yellow letters must be reused.";
   }
 }
 
