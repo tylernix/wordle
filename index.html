@@ -671,16 +671,22 @@ function updateEnterKey() {
   }
 }
 
-// Hard mode validation: must reuse all revealed hints
-function checkHardMode(guess) {
+// Hint validation: medium requires revealed letters appear somewhere,
+// hard also locks green letters in their exact position.
+function checkHints(guess, strict) {
   for (let i = 0; i < results.length; i++) {
     const prevGuess = [];
     for (let c = 0; c < 5; c++) {
       prevGuess.push(tiles[i][c].textContent.toLowerCase());
     }
     for (let c = 0; c < 5; c++) {
-      if (results[i][c] === "correct" && guess[c] !== prevGuess[c]) {
-        return `Position ${c + 1} must be ${prevGuess[c].toUpperCase()}`;
+      if (results[i][c] === "correct") {
+        if (strict && guess[c] !== prevGuess[c]) {
+          return `Position ${c + 1} must be ${prevGuess[c].toUpperCase()}`;
+        }
+        if (!strict && !guess.includes(prevGuess[c])) {
+          return `Guess must contain ${prevGuess[c].toUpperCase()}`;
+        }
       }
       if (results[i][c] === "present" && !guess.includes(prevGuess[c])) {
         return `Guess must contain ${prevGuess[c].toUpperCase()}`;
@@ -719,7 +725,7 @@ function handleKey(key) {
       return;
     }
     if (difficulty === "medium" || difficulty === "hard") {
-      const err = checkHardMode(guess);
+      const err = checkHints(guess, difficulty === "hard");
       if (err) {
         shakeRow(currentRow);
         showMessage(err);
